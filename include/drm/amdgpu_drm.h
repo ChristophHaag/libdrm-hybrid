@@ -583,6 +583,8 @@ struct drm_amdgpu_cs_chunk_data {
 	/* Subquery id: Query graphics voltage */
 	#define AMDGPU_INFO_SENSOR_VDDGFX		0x7
 
+/* gpu capability */
+#define AMDGPU_INFO_CAPABILITY			0x50
 /* virtual range */
 #define AMDGPU_INFO_VIRTUAL_RANGE               0x51
 
@@ -839,6 +841,16 @@ struct drm_amdgpu_info_vce_clock_table {
 struct drm_amdgpu_virtual_range {
 	uint64_t start;
 	uint64_t end;
+};
+
+/* query pin memory capability */
+#define AMDGPU_CAPABILITY_PIN_MEM_FLAG		(1 << 0)
+/* query direct gma capability */
+#define AMDGPU_CAPABILITY_DIRECT_GMA_FLAG	(1 << 1)
+
+struct drm_amdgpu_capability {
+	uint32_t flag;
+	uint32_t direct_gma_size;
 };
 
 #if defined(__cplusplus)

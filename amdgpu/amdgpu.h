@@ -42,6 +42,7 @@ extern "C" {
 #endif
 
 struct drm_amdgpu_info_hw_ip;
+struct drm_amdgpu_capability;
 
 /*--------------------------------------------------------------------------*/
 /* --------------------------- Defines ------------------------------------ */
@@ -65,6 +66,11 @@ struct drm_amdgpu_info_hw_ip;
  * is absolute.
  */
 #define AMDGPU_QUERY_FENCE_TIMEOUT_IS_ABSOLUTE     (1 << 0)
+
+/**
+ * Used in amdgpu_query_capability(), meaning if pin feature is enabled.
+ */
+#define AMDGPU_CAP_PIN_MEM  (1 << 0)
 
 /*--------------------------------------------------------------------------*/
 /* ----------------------------- Enums ------------------------------------ */
@@ -1073,6 +1079,20 @@ int amdgpu_query_gpu_info(amdgpu_device_handle dev,
 */
 int amdgpu_query_info(amdgpu_device_handle dev, unsigned info_id,
 		      unsigned size, void *value);
+
+/**
+ * Query hardware or driver capabilities.
+ *
+ *
+ * \param   dev     - \c [in] Device handle. See #amdgpu_device_initialize()
+ * \param   value   - \c [out] Pointer to the return value.
+ *
+ * \return   0 on success\n
+ *          <0 - Negative POSIX error code
+ *
+*/
+int amdgpu_query_capability(amdgpu_device_handle dev,
+			     struct drm_amdgpu_capability *cap);
 
 /**
  * Query information about GDS
