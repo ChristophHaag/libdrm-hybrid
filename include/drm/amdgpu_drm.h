@@ -53,6 +53,7 @@ extern "C" {
 #define DRM_AMDGPU_WAIT_FENCES		0x12
 
 /* hybrid specific ioctls */
+#define DRM_AMDGPU_GEM_DGMA		0x5c
 #define DRM_AMDGPU_FREESYNC		0x5d
 #define DRM_AMDGPU_GEM_FIND_BO		0x5f
 
@@ -71,6 +72,7 @@ extern "C" {
 #define DRM_IOCTL_AMDGPU_WAIT_FENCES	DRM_IOWR(DRM_COMMAND_BASE + DRM_AMDGPU_WAIT_FENCES, union drm_amdgpu_wait_fences)
 
 /* hybrid specific ioctls */
+#define DRM_IOCTL_AMDGPU_GEM_DGMA	DRM_IOWR(DRM_COMMAND_BASE + DRM_AMDGPU_GEM_DGMA, struct drm_amdgpu_gem_dgma)
 #define DRM_IOCTL_AMDGPU_GEM_FIND_BO	DRM_IOWR(DRM_COMMAND_BASE + DRM_AMDGPU_GEM_FIND_BO, struct drm_amdgpu_gem_find_bo)
 #define DRM_IOCTL_AMDGPU_FREESYNC	DRM_IOWR(DRM_COMMAND_BASE + DRM_AMDGPU_FREESYNC, struct drm_amdgpu_freesync)
 
@@ -80,6 +82,7 @@ extern "C" {
 #define AMDGPU_GEM_DOMAIN_GDS		0x8
 #define AMDGPU_GEM_DOMAIN_GWS		0x10
 #define AMDGPU_GEM_DOMAIN_OA		0x20
+#define AMDGPU_GEM_DOMAIN_DGMA		0x40
 
 /* Flag that CPU access will be required for the case of VRAM domain */
 #define AMDGPU_GEM_CREATE_CPU_ACCESS_REQUIRED	(1 << 0)
@@ -221,6 +224,15 @@ struct drm_amdgpu_gem_userptr {
 	__u32		flags;
 	/* Resulting GEM handle */
 	__u32		handle;
+};
+
+#define AMDGPU_GEM_DGMA_IMPORT			0
+#define AMDGPU_GEM_DGMA_QUERY_PHYS_ADDR	1
+struct drm_amdgpu_gem_dgma {
+	uint64_t		addr;
+	uint64_t		size;
+	uint32_t		op;
+	uint32_t		handle;
 };
 
 struct drm_amdgpu_gem_find_bo {
