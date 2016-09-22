@@ -25,6 +25,8 @@
 #include "config.h"
 #endif
 
+#include <sys/stat.h>
+#include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -595,4 +597,93 @@ static int amdgpu_cs_unreference_sem(amdgpu_semaphore_handle sem)
 int amdgpu_cs_destroy_semaphore(amdgpu_semaphore_handle sem)
 {
 	return amdgpu_cs_unreference_sem(sem);
+}
+
+int amdgpu_cs_create_sem(amdgpu_device_handle dev,
+			 amdgpu_sem_handle *sem)
+{
+	union drm_amdgpu_sem args;
+	int r;
+
+	if (NULL == dev)
+		return -EINVAL;
+
+	/* Create the context */
+	memset(&args, 0, sizeof(args));
+	args.in.op = AMDGPU_SEM_OP_CREATE_SEM;
+	r = drmCommandWriteRead(dev->fd, DRM_AMDGPU_SEM, &args, sizeof(args));
+	if (r)
+		return r;
+
+	*sem = args.out.handle;
+
+	return 0;
+}
+
+int amdgpu_cs_signal_sem(amdgpu_device_handle dev,
+			 amdgpu_context_handle ctx,
+			 uint32_t ip_type,
+			 uint32_t ip_instance,
+			 uint32_t ring,
+			 amdgpu_sem_handle sem)
+{
+	union drm_amdgpu_sem args;
+
+	if (NULL == dev)
+		return -EINVAL;
+
+	/* Create the context */
+	memset(&args, 0, sizeof(args));
+	args.in.op = AMDGPU_SEM_OP_SIGNAL_SEM;
+	args.in.ctx_id = ctx->id;
+	args.in.ip_type = ip_type;
+	args.in.ip_instance = ip_instance;
+	args.in.ring = ring;
+	args.in.handle = sem;
+	args.in.seq = ~0ull;
+	return drmCommandWriteRead(dev->fd, DRM_AMDGPU_SEM, &args, sizeof(args));
+}
+
+int amdgpu_cs_wait_sem(amdgpu_device_handle dev,
+		       amdgpu_context_handle ctx,
+		       uint32_t ip_type,
+		       uint32_t ip_instance,
+		       uint32_t ring,
+		       amdgpu_sem_handle sem)
+{
+	union drm_amdgpu_sem args;
+
+	if (NULL == dev)
+		return -EINVAL;
+
+	/* Create the context */
+	memset(&args, 0, sizeof(args));
+	args.in.op = AMDGPU_SEM_OP_WAIT_SEM;
+	args.in.ctx_id = ctx->id;
+	args.in.ip_type = ip_type;
+	args.in.ip_instance = ip_instance;
+	args.in.ring = ring;
+	args.in.handle = sem;
+	args.in.seq = 0;
+	return drmCommandWriteRead(dev->fd, DRM_AMDGPU_SEM, &args, sizeof(args));
+}
+
+int amdgpu_cs_destroy_sem(amdgpu_device_handle dev,
+			  amdgpu_sem_handle sem)
+{
+	union drm_amdgpu_sem args;
+	int r;
+
+	if (NULL == dev)
+		return -EINVAL;
+
+	/* Create the context */
+	memset(&args, 0, sizeof(args));
+	args.in.op = AMDGPU_SEM_OP_DESTROY_SEM;
+	args.in.handle = sem;
+	r = drmCommandWriteRead(dev->fd, DRM_AMDGPU_SEM, &args, sizeof(args));
+	if (r)
+		return r;
+
+	return 0;
 }
