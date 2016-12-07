@@ -131,11 +131,19 @@ int amdgpu_get_auth(int fd, int *auth)
 
 static void amdgpu_device_free_internal(amdgpu_device_handle dev)
 {
+	struct amdgpu_va_remap* vao;
 	amdgpu_vamgr_deinit(&dev->vamgr_32);
 	amdgpu_vamgr_deinit(&dev->vamgr);
 	util_hash_table_destroy(dev->bo_flink_names);
 	util_hash_table_destroy(dev->bo_handles);
 	pthread_mutex_destroy(&dev->bo_table_mutex);
+
+	pthread_mutex_destroy(&dev->remap_mutex);
+	LIST_FOR_EACH_ENTRY(vao, &dev->remap_list, list) {
+		list_del(&vao->list);
+		free(vao);
+	}
+	
 	util_hash_table_remove(fd_tab, UINT_TO_PTR(dev->fd));
 	close(dev->fd);
 	if ((dev->flink_fd >= 0) && (dev->fd != dev->flink_fd))
@@ -268,6 +276,9 @@ int amdgpu_device_initialize(int fd,
 			  dev->dev_info.virtual_address_alignment);
 
 	dev->svm_allocated = false;
+
+	pthread_mutex_init(&dev->remap_mutex, NULL);
+	list_inithead(&dev->remap_list);
 
 	*major_version = dev->major_version;
 	*minor_version = dev->minor_version;

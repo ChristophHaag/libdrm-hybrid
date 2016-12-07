@@ -968,3 +968,104 @@ int amdgpu_bo_va_op_raw(amdgpu_device_handle dev,
 
 	return r;
 }
+
+int amdgpu_bo_va_op_refcounted(amdgpu_device_handle dev,
+		amdgpu_bo_handle ibo,
+		uint64_t offset,
+		uint64_t size,
+		uint64_t addr,
+		uint64_t flags,
+		uint32_t ops)
+{
+	amdgpu_bo_handle bo = ibo;
+	struct drm_amdgpu_gem_va va;
+	struct amdgpu_va_remap* vao = NULL;
+	struct amdgpu_va_remap* vahandle;
+
+	int r;
+
+	if (bo) {
+		if (bo->dev != dev)
+			return -EINVAL;
+	}
+
+	pthread_mutex_lock(&dev->remap_mutex);
+
+	/* find the previous mapped va object and its bo and unmap it*/
+	if (ops == AMDGPU_VA_OP_MAP) {
+		LIST_FOR_EACH_ENTRY(vahandle, &dev->remap_list, list) {
+			/* check whether the remap list alraedy have va that overlap with current request */
+			if (((vahandle->address <= addr) && (vahandle->address + vahandle->size) > addr) ||
+				((vahandle->address > addr) && (vahandle->address < (addr + size)))) {
+				/* the overlap va mapping which need to be unmapped first */
+				vao = vahandle;
+				r = amdgpu_bo_va_op(vao->bo, vao->offset, vao->size, vao->address, flags, AMDGPU_VA_OP_UNMAP);
+				if (r) {
+					pthread_mutex_unlock(&dev->remap_mutex);
+					return -EINVAL;
+				}
+
+				/* Just drop the reference. */
+				amdgpu_bo_reference(&vao->bo, NULL);
+				/* remove the remap from list */
+				list_del(&vao->list);
+				free(vao);
+			}
+		}
+		vao = NULL;
+	} else if (ops == AMDGPU_VA_OP_UNMAP) {
+		LIST_FOR_EACH_ENTRY(vahandle, &dev->remap_list, list) {
+			if (vahandle->address == addr &&
+				vahandle->size    == size &&
+				vahandle->offset  == offset) {
+				vao = vahandle;
+				break;
+			}
+		}
+		if (vao) {
+			if (bo && (bo != vao->bo)) {
+				pthread_mutex_unlock(&dev->remap_mutex);
+				return -EINVAL;
+			}
+		} else {
+			pthread_mutex_unlock(&dev->remap_mutex);
+			return -EINVAL;
+		}
+	} else {
+		pthread_mutex_unlock(&dev->remap_mutex);
+		return -EINVAL;
+	}
+
+	/* we only allow null bo for unmap operation */
+	if (!bo)
+		bo = vao->bo;
+
+	r = amdgpu_bo_va_op(bo, offset, size, addr, flags, ops);
+	if (r == 0) {
+		/* unref the bo right after the unmap call */
+		if (ops == AMDGPU_VA_OP_UNMAP) {
+			/* Just drop the reference. */
+			amdgpu_bo_reference(&bo, NULL);
+			/* remove the remap from list */
+			list_del(&vao->list);
+			free(vao);
+		} else if (ops == AMDGPU_VA_OP_MAP) {
+			/* bump the refcount of bo! */
+			atomic_inc(&bo->refcount);
+			/* add the remap to list and vao should be NULL for map */
+			vao = (struct amdgpu_va_remap*)calloc(1, sizeof(struct amdgpu_va_remap));
+			if (!vao) {
+				pthread_mutex_unlock(&dev->remap_mutex);
+				return -ENOMEM;
+			}
+			vao->address = addr;
+			vao->size = size;
+			vao->offset = offset;
+			vao->bo = bo;
+			list_add(&vao->list, &dev->remap_list);
+		}
+	}
+	pthread_mutex_unlock(&dev->remap_mutex);
+	return r;
+}
+

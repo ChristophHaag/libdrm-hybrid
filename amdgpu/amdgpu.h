@@ -1479,6 +1479,28 @@ int amdgpu_bo_va_op_raw(amdgpu_device_handle dev,
 			uint32_t ops);
 
 /**
+ *  VA mapping/unmapping for the buffer object
+ *
+ * \param  dev      = \c [in] Device handle.
+ * \param  bo       - \c [in] BO handle
+ * \param  offset   - \c [in] Start offset to map
+ * \param  size     - \c [in] Size to map
+ * \param  addr     - \c [in] Start virtual address.
+ * \param  flags    - \c [in] Supported flags for mapping/unmapping
+ * \param  ops      - \c [in] AMDGPU_VA_OP_MAP or AMDGPU_VA_OP_UNMAP
+ *
+ * \return   0 on success\n
+ *          <0 - Negative POSIX Error code
+ */
+int amdgpu_bo_va_op_refcounted(amdgpu_device_handle dev,
+		amdgpu_bo_handle bo,
+		uint64_t offset,
+		uint64_t size,
+		uint64_t addr,
+		uint64_t flags,
+		uint32_t ops);
+
+/**
  * Reserve the virtual address range for SVM support
  *
  * \param amdgpu_device_handle

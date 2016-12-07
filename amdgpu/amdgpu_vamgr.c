@@ -475,8 +475,37 @@ int amdgpu_va_range_alloc_in_range(amdgpu_device_handle dev,
 
 int amdgpu_va_range_free(amdgpu_va_handle va_range_handle)
 {
+	amdgpu_device_handle dev;
+	uint64_t address;
+	uint64_t size;
+	struct amdgpu_va_remap* vahandle;
+	int r = 0;
+
 	if(!va_range_handle || !va_range_handle->address)
 		return 0;
+
+	dev     = va_range_handle->dev;
+	address = va_range_handle->address;
+	size    = va_range_handle->size;
+
+	pthread_mutex_lock(&dev->remap_mutex);
+	/* clean up previous mapping if it is used for virtual allocation */
+	LIST_FOR_EACH_ENTRY(vahandle, &dev->remap_list, list) {
+		/* check whether the remap list alraedy have va that overlap with current request */
+		if (((vahandle->address <= address) && (vahandle->address + vahandle->size) > address) ||
+				((vahandle->address > address) && (vahandle->address < (address + size)))) {
+			/* the overlap va mapping which need to be unmapped first */
+			r = amdgpu_bo_va_op(vahandle->bo, vahandle->offset, vahandle->size, vahandle->address, 0, AMDGPU_VA_OP_UNMAP);
+			if (r)
+				return -EINVAL;
+			/* Just drop the reference. */
+			amdgpu_bo_reference(&vahandle->bo, NULL);
+			/* remove the remap from list */
+			list_del(&vahandle->list);
+			free(vahandle);
+		}
+	}
+	pthread_mutex_unlock(&dev->remap_mutex);
 
 	amdgpu_vamgr_free_va(va_range_handle->vamgr,
 			va_range_handle->address,

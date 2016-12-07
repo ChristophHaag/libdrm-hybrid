@@ -74,6 +74,14 @@ struct amdgpu_va {
 	struct amdgpu_bo_va_mgr *vamgr;
 };
 
+struct amdgpu_va_remap{
+	uint64_t address;
+	uint64_t size;
+	uint64_t offset;
+	amdgpu_bo_handle bo;
+	struct list_head list;
+};
+
 struct amdgpu_device {
 	atomic_t refcount;
 	int fd;
@@ -95,6 +103,9 @@ struct amdgpu_device {
 	struct amdgpu_bo_va_mgr vamgr_32;
 	/** svm range allocated */
 	bool svm_allocated;
+	/** The VA remapped list*/
+	pthread_mutex_t  remap_mutex;
+	struct list_head remap_list;
 };
 
 struct amdgpu_bo {
