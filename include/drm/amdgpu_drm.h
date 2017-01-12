@@ -87,6 +87,8 @@ extern "C" {
 #define AMDGPU_GEM_CREATE_VRAM_CONTIGUOUS	(1 << 5)
 
 /* Hybrid specific */
+/* Flag that the memory should be in SPARSE resource */
+#define AMDGPU_GEM_CREATE_SPARSE		(1ULL << 29)
 /* Flag that the memory allocation should be pinned */
 #define AMDGPU_GEM_CREATE_NO_EVICT		(1ULL << 31)
 
