@@ -54,7 +54,7 @@ struct drm_amdgpu_capability;
  *
  * \sa amdgpu_cs_ib_info
 */
-#define AMDGPU_CS_MAX_IBS_PER_SUBMIT		4
+#define AMDGPU_CS_MAX_IBS_PER_SUBMIT		16
 
 /**
  * Special timeout value meaning that the timeout is infinite.
