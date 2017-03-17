@@ -30,6 +30,8 @@ AM_CFLAGS = \
 	$(PTHREADSTUBS_CFLAGS) \
 	-I$(top_srcdir)/include/drm
 
+AM_CPPFLAGS = -DAMDGPU_ASIC_ID_TABLE=\"${datadir}/libdrm/amdgpu.ids\"
+
 libdrm_amdgpu_la_LTLIBRARIES = libdrm_amdgpu.la
 libdrm_amdgpu_ladir = $(libdir)
 libdrm_amdgpu_la_LDFLAGS = -version-number 1:0:0 -no-undefined

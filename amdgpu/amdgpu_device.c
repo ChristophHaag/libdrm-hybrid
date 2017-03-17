@@ -44,7 +44,6 @@
 #include "amdgpu_internal.h"
 #include "util_hash_table.h"
 #include "util_math.h"
-#include "amdgpu_asic_id.h"
 
 #define PTR_TO_UINT(x) ((unsigned)((intptr_t)(x)))
 #define UINT_TO_PTR(x) ((void *)((intptr_t)(x)))
@@ -148,6 +147,7 @@ static void amdgpu_device_free_internal(amdgpu_device_handle dev)
 	close(dev->fd);
 	if ((dev->flink_fd >= 0) && (dev->fd != dev->flink_fd))
 		close(dev->flink_fd);
+	free(dev->asic_ids);
 	free(dev);
 }
 
@@ -243,6 +243,10 @@ int amdgpu_device_initialize(int fd,
 	dev->minor_version = version->version_minor;
 	drmFreeVersion(version);
 
+	r = amdgpu_parse_asic_ids(&dev->asic_ids);
+	if (r)
+		goto cleanup;
+
 	dev->bo_flink_names = util_hash_table_create(handle_hash,
 						     handle_compare);
 	dev->bo_handles = util_hash_table_create(handle_hash, handle_compare);
@@ -295,6 +299,8 @@ free_va:
 	amdgpu_vamgr_deinit(&dev->vamgr);
 
 cleanup:
+	if (dev->asic_ids)
+		free(dev->asic_ids);
 	if (dev->fd >= 0)
 		close(dev->fd);
 	free(dev);
@@ -310,13 +316,15 @@ int amdgpu_device_deinitialize(amdgpu_device_handle dev)
 
 const char *amdgpu_get_marketing_name(amdgpu_device_handle dev)
 {
-	const struct amdgpu_asic_id_table_t *t = amdgpu_asic_id_table;
+	const struct amdgpu_asic_id *id;
 
-	while (t->did) {
-		if ((t->did == dev->info.asic_id) &&
-		    (t->rid == dev->info.pci_rev_id))
-			return t->marketing_name;
-		t++;
+	if (!dev->asic_ids)
+		return NULL;
+
+	for (id = dev->asic_ids; id->did; id++) {
+		if ((id->did == dev->info.asic_id) &&
+				(id->rid == dev->info.pci_rev_id))
+			return id->marketing_name;
 	}
 
 	return NULL;
