@@ -91,6 +91,12 @@ static CU_SuiteInfo suites[] = {
 		.pCleanupFunc = suite_uvd_enc_tests_clean,
 		.pTests = uvd_enc_tests,
 	},
+	{
+		.pName = "VCN Tests",
+		.pInitFunc = suite_vcn_tests_init,
+		.pCleanupFunc = suite_vcn_tests_clean,
+		.pTests = vcn_tests,
+	},
 	CU_SUITE_INFO_NULL,
 };
 
