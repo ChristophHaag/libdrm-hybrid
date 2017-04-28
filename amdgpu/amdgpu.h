@@ -1645,6 +1645,19 @@ int amdgpu_cs_signal_sem(amdgpu_device_handle dev,
 			 uint32_t ip_instance,
 			 uint32_t ring,
 			 amdgpu_sem_handle sem);
+/**
+ *  reserve vmid for this process
+ *
+ * \param   dev    - [in] Device handle. See #amdgpu_device_initialize()
+ */
+int amdgpu_cs_reserved_vmid(amdgpu_device_handle dev);
+
+/**
+ *  unreserve vmid for this process
+ *
+ * \param   dev    - [in] Device handle. See #amdgpu_device_initialize()
+ */
+int amdgpu_cs_unreserved_vmid(amdgpu_device_handle dev);
 
 /**
  *  wait sem

@@ -730,3 +730,31 @@ int amdgpu_cs_destroy_sem(amdgpu_device_handle dev,
 
 	return 0;
 }
+
+int amdgpu_cs_unreserved_vmid(amdgpu_device_handle dev)
+{
+	union drm_amdgpu_vm args;
+	int r;
+
+	if (NULL == dev)
+		return -EINVAL;
+
+	memset(&args, 0, sizeof(args));
+	args.in.op = AMDGPU_VM_OP_UNRESERVE_VMID;
+	r = drmCommandWriteRead(dev->fd, DRM_AMDGPU_VM, &args, sizeof(args));
+	return r;
+}
+
+int amdgpu_cs_reserved_vmid(amdgpu_device_handle dev)
+{
+	union drm_amdgpu_vm args;
+	int r;
+
+	if (NULL == dev)
+		return -EINVAL;
+
+	memset(&args, 0, sizeof(args));
+	args.in.op = AMDGPU_VM_OP_RESERVE_VMID;
+	r = drmCommandWriteRead(dev->fd, DRM_AMDGPU_VM, &args, sizeof(args));
+	return r;
+}
