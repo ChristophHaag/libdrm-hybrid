@@ -50,6 +50,7 @@ static void amdgpu_command_submission_sdma(void);
 static void amdgpu_userptr_test(void);
 static void amdgpu_semaphore_test(void);
 static void amdgpu_svm_test(void);
+static void amdgpu_multi_svm_test(void);
 
 static void amdgpu_command_submission_write_linear_helper(unsigned ip_type);
 static void amdgpu_command_submission_const_fill_helper(unsigned ip_type);
@@ -65,6 +66,7 @@ CU_TestInfo basic_tests[] = {
 	{ "Command submission Test (SDMA)", amdgpu_command_submission_sdma },
 	{ "SW semaphore Test",  amdgpu_semaphore_test },
 	{ "SVM Test", amdgpu_svm_test },
+	{ "SVM Test (multi-GPUs)", amdgpu_multi_svm_test },
 	CU_TEST_INFO_NULL,
 };
 #define BUFFER_SIZE (8 * 1024)
@@ -1382,4 +1384,72 @@ static void amdgpu_svm_test(void)
 	}
 
 	amdgpu_svm_deinit(device_handle);
+}
+
+static void amdgpu_multi_svm_test(void)
+{
+	int r;
+	int i;
+	uint64_t svm_mcs[MAX_CARDS_SUPPORTED];
+	amdgpu_va_handle va_handles[MAX_CARDS_SUPPORTED];
+	amdgpu_device_handle device_handles[MAX_CARDS_SUPPORTED];
+	uint32_t major_version;
+	uint32_t minor_version;
+
+	device_handles[0] = device_handle;
+
+	r = amdgpu_svm_init(device_handles[0]);
+	CU_ASSERT_EQUAL(r, 0);
+
+	for (i = 1; i < MAX_CARDS_SUPPORTED && drm_amdgpu[i] >= 0; i++) {
+		r = amdgpu_device_initialize(drm_amdgpu[i], &major_version,
+					     &minor_version, &device_handles[i]);
+		CU_ASSERT_EQUAL(r, 0);
+
+		r = amdgpu_svm_init(device_handles[i]);
+		CU_ASSERT_EQUAL(r, 0);
+	}
+
+	printf("\n");
+	printf("    Testing to alloc and free SVM in all GPUs.\n");
+	printf("    The svm_mcs generally are same.\n");
+	for (i = 0; i < MAX_CARDS_SUPPORTED && drm_amdgpu[i] >= 0; i++) {
+		r = amdgpu_va_range_alloc(device_handles[i],
+					  amdgpu_gpu_va_range_svm,
+					  0x1000000, 1, 0, &svm_mcs[i],
+					  &va_handles[i], 0);
+		CU_ASSERT_EQUAL(r, 0);
+		printf("        card %d, svm_mc 0x%llx\n", i, svm_mcs[i]);
+		if (svm_mcs[i] != svm_mcs[0])
+			printf("WARNING: The SVM from different GPUs should be "
+			       "able to be allocated from same location.");
+		r = amdgpu_va_range_free(va_handles[i]);
+		CU_ASSERT_EQUAL(r, 0);
+	}
+
+	printf("    Testing to alloc SVM in all GPUs.\n");
+	printf("    The svm_mcs are generally different by 0x1000000\n");
+	for (i = 0; i < MAX_CARDS_SUPPORTED && drm_amdgpu[i] >= 0; i++) {
+		r = amdgpu_va_range_alloc(device_handles[i],
+					  amdgpu_gpu_va_range_svm,
+					  0x1000000, 1, 0, &svm_mcs[i],
+					  &va_handles[i], 0);
+		CU_ASSERT_EQUAL(r, 0);
+		printf("        card %d, svm_mc 0x%llx\n", i, svm_mcs[i]);
+		if (svm_mcs[i] - svm_mcs[0] != 0x1000000 * i)
+			printf("WARNING: The SVM from GPUs should be allocated sequentially.");
+	}
+
+	for (i = 0; i < MAX_CARDS_SUPPORTED && drm_amdgpu[i] >= 0; i++) {
+		r = amdgpu_va_range_free(va_handles[i]);
+		CU_ASSERT_EQUAL(r, 0);
+	}
+
+	for (i = 1; i < MAX_CARDS_SUPPORTED && drm_amdgpu[i] >= 0; i++) {
+		amdgpu_svm_deinit(device_handles[i]);
+		r = amdgpu_device_deinitialize(device_handles[i]);
+		CU_ASSERT_EQUAL(r, 0);
+	}
+
+	amdgpu_svm_deinit(device_handles[0]);
 }
