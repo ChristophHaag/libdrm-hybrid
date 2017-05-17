@@ -141,7 +141,6 @@ int amdgpu_parse_asic_ids(struct amdgpu_asic_id **p_asic_id_table)
 		if (strlen(line) == 0 || line[0] == '#')
 			continue;
 
-		printf("%s version: %s\n", AMDGPU_ASIC_ID_TABLE, line);
 		break;
 	}
 
