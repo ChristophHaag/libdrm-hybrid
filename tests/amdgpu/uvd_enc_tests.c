@@ -98,10 +98,8 @@ int suite_uvd_enc_tests_init(void)
 
 	family_id = device_handle->info.family_id;
 
-	if (family_id < AMDGPU_FAMILY_AI) {
-
+	if (family_id < AMDGPU_FAMILY_AI || family_id >= AMDGPU_FAMILY_RV) {
 		printf("\n\nThe ASIC NOT support UVD ENC, all sub-tests will pass\n");
-
 		return CUE_SUCCESS;
 	}
 
@@ -123,7 +121,7 @@ int suite_uvd_enc_tests_clean(void)
 {
 	int r;
 
-	if (family_id < AMDGPU_FAMILY_AI) {
+	if (family_id < AMDGPU_FAMILY_AI || family_id >= AMDGPU_FAMILY_RV) {
 
 		r = amdgpu_device_deinitialize(device_handle);
 		if (r)
@@ -244,7 +242,7 @@ static void amdgpu_cs_uvd_enc_create(void)
 {
 	int len, r;
 
-	if (family_id < AMDGPU_FAMILY_AI)
+	if (family_id < AMDGPU_FAMILY_AI || family_id >= AMDGPU_FAMILY_RV)
 		return;
 
 	enc.width = 160;
@@ -301,7 +299,7 @@ static void amdgpu_cs_uvd_enc_session_init(void)
 {
 	int len, r;
 
-	if (family_id < AMDGPU_FAMILY_AI)
+	if (family_id < AMDGPU_FAMILY_AI || family_id >= AMDGPU_FAMILY_RV)
 		return;
 
 	num_resources  = 0;
@@ -372,7 +370,7 @@ static void amdgpu_cs_uvd_enc_encode(void)
 	vbuf_size = ALIGN(enc.width, align) * ALIGN(enc.height, 16) * 1.5;
 	cpb_size = vbuf_size * 10;
 
-	if (family_id < AMDGPU_FAMILY_AI)
+	if (family_id < AMDGPU_FAMILY_AI || family_id >= AMDGPU_FAMILY_RV)
 		return;
 
 	num_resources  = 0;
@@ -478,7 +476,7 @@ static void amdgpu_cs_uvd_enc_destroy(void)
 	struct amdgpu_uvd_enc_bo sw_ctx;
 	int len, r;
 
-	if (family_id < AMDGPU_FAMILY_AI)
+	if (family_id < AMDGPU_FAMILY_AI || family_id >= AMDGPU_FAMILY_RV)
 		return;
 
 	num_resources  = 0;
