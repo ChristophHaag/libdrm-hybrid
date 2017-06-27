@@ -386,7 +386,10 @@ union drm_amdgpu_gem_wait_idle {
 };
 
 struct drm_amdgpu_wait_cs_in {
-	/** Command submission handle */
+	/* Command submission handle
+         * handle equals 0 means none to wait for
+         * handle equals ~0ull means wait for the latest sequence number
+         */
 	__u64 handle;
 	/** Absolute timeout to wait */
 	__u64 timeout;
@@ -506,6 +509,8 @@ struct drm_amdgpu_gem_va {
 #define AMDGPU_CHUNK_ID_IB		0x01
 #define AMDGPU_CHUNK_ID_FENCE		0x02
 #define AMDGPU_CHUNK_ID_DEPENDENCIES	0x03
+#define AMDGPU_CHUNK_ID_SYNCOBJ_IN      0x04
+#define AMDGPU_CHUNK_ID_SYNCOBJ_OUT     0x05
 
 struct drm_amdgpu_cs_chunk {
 	__u32		chunk_id;
@@ -571,6 +576,10 @@ struct drm_amdgpu_cs_chunk_dep {
 struct drm_amdgpu_cs_chunk_fence {
 	__u32 handle;
 	__u32 offset;
+};
+
+struct drm_amdgpu_cs_chunk_sem {
+	__u32 handle;
 };
 
 struct drm_amdgpu_cs_chunk_data {
@@ -669,6 +678,8 @@ struct drm_amdgpu_cs_chunk_data {
 	#define AMDGPU_INFO_SENSOR_VDDNB		0x6
 	/* Subquery id: Query graphics voltage */
 	#define AMDGPU_INFO_SENSOR_VDDGFX		0x7
+/* Number of VRAM page faults on CPU access. */
+#define AMDGPU_INFO_NUM_VRAM_CPU_PAGE_FAULTS	0x1E
 
 /* gpu capability */
 #define AMDGPU_INFO_CAPABILITY			0x50
