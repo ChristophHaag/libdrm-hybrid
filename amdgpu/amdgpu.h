@@ -1741,8 +1741,61 @@ void amdgpu_cs_chunk_fence_to_dep(struct amdgpu_cs_fence *fence,
 void amdgpu_cs_chunk_fence_info_to_data(struct amdgpu_cs_fence_info *fence_info,
 					struct drm_amdgpu_cs_chunk_data *data);
 
+/**
+ *  Create kernel sync object
+ *
+ * \param   dev	      - \c [in]  device handle
+ * \param   syncobj   - \c [out] sync object handle
+ *
+ * \return   0 on success\n
+ *          <0 - Negative POSIX Error code
+ *
+*/
+int amdgpu_cs_create_syncobj(amdgpu_device_handle dev,
+			     uint32_t *syncobj);
+/**
+ *  Destroy kernel sync object
+ *
+ * \param   dev	    - \c [in] device handle
+ * \param   syncobj - \c [in] sync object handle
+ *
+ * \return   0 on success\n
+ *          <0 - Negative POSIX Error code
+ *
+*/
+int amdgpu_cs_destroy_syncobj(amdgpu_device_handle dev,
+			      uint32_t syncobj);
+
+/**
+ *  Export kernel sync object to shareable fd.
+ *
+ * \param   dev	       - \c [in] device handle
+ * \param   syncobj    - \c [in] sync object handle
+ * \param   shared_fd  - \c [out] shared file descriptor.
+ *
+ * \return   0 on success\n
+ *          <0 - Negative POSIX Error code
+ *
+*/
+int amdgpu_cs_export_syncobj(amdgpu_device_handle dev,
+			     uint32_t syncobj,
+			     int *shared_fd);
+/**
+ *  Import kernel sync object from shareable fd.
+ *
+ * \param   dev	       - \c [in] device handle
+ * \param   shared_fd  - \c [in] shared file descriptor.
+ * \param   syncobj    - \c [out] sync object handle
+ *
+ * \return   0 on success\n
+ *          <0 - Negative POSIX Error code
+ *
+*/
+int amdgpu_cs_import_syncobj(amdgpu_device_handle dev,
+			     int shared_fd,
+			     uint32_t *syncobj);
+
 #ifdef __cplusplus
 }
 #endif
-
 #endif /* #ifdef _AMDGPU_H_ */
