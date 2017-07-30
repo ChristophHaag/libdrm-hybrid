@@ -88,13 +88,6 @@ struct amdgpu_va_remap{
 	struct list_head list;
 };
 
-struct amdgpu_asic_id {
-    char marketing_name[64];
-    uint32_t did;
-    uint32_t rid;
-    char padding[56];
-};
-
 struct amdgpu_device {
 	atomic_t refcount;
 	int fd;
