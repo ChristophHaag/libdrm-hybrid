@@ -74,6 +74,12 @@ struct amdgpu_va {
 	struct amdgpu_bo_va_mgr *vamgr;
 };
 
+struct amdgpu_asic_id {
+	uint32_t did;
+	uint32_t rid;
+	char *marketing_name;
+};
+
 struct amdgpu_va_remap{
 	uint64_t address;
 	uint64_t size;
@@ -175,6 +181,8 @@ amdgpu_vamgr_find_va(struct amdgpu_bo_va_mgr *mgr, uint64_t size,
 
 drm_private void
 amdgpu_vamgr_free_va(struct amdgpu_bo_va_mgr *mgr, uint64_t va, uint64_t size);
+
+drm_private int amdgpu_parse_asic_ids(struct amdgpu_asic_id **asic_ids);
 
 drm_private int amdgpu_parse_asic_ids(struct amdgpu_asic_id **asic_ids);
 

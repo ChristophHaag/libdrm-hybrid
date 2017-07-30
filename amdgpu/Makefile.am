@@ -30,7 +30,11 @@ AM_CFLAGS = \
 	$(PTHREADSTUBS_CFLAGS) \
 	-I$(top_srcdir)/include/drm
 
-AM_CPPFLAGS = -DAMDGPU_ASIC_ID_TABLE=\"${datadir}/libdrm/amdgpu.ids\"
+libdrmdatadir = @libdrmdatadir@
+ASIC_ID_TABLE_NUM_ENTRIES := $(shell egrep -ci '^[0-9a-f]{4},.*[0-9a-f]+,' \
+	$(top_srcdir)/data/amdgpu.ids)
+AM_CPPFLAGS = -DAMDGPU_ASIC_ID_TABLE=\"${libdrmdatadir}/amdgpu.ids\" \
+	-DAMDGPU_ASIC_ID_TABLE_NUM_ENTRIES=$(ASIC_ID_TABLE_NUM_ENTRIES)
 
 libdrm_amdgpu_la_LTLIBRARIES = libdrm_amdgpu.la
 libdrm_amdgpu_ladir = $(libdir)
@@ -38,6 +42,7 @@ libdrm_amdgpu_la_LDFLAGS = -version-number 1:0:0 -no-undefined
 libdrm_amdgpu_la_LIBADD = ../libdrm.la @PTHREADSTUBS_LIBS@
 
 libdrm_amdgpu_la_SOURCES = $(LIBDRM_AMDGPU_FILES)
+amdgpu_asic_id.lo: $(top_srcdir)/data/amdgpu.ids
 
 libdrm_amdgpuincludedir = ${includedir}/libdrm
 libdrm_amdgpuinclude_HEADERS = $(LIBDRM_AMDGPU_H_FILES)

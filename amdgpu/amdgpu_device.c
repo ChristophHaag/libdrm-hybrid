@@ -130,6 +130,7 @@ int amdgpu_get_auth(int fd, int *auth)
 
 static void amdgpu_device_free_internal(amdgpu_device_handle dev)
 {
+	const struct amdgpu_asic_id *id;
 	struct amdgpu_va_remap* vao;
 	amdgpu_vamgr_deinit(&dev->vamgr_32);
 	amdgpu_vamgr_deinit(&dev->vamgr);
@@ -147,7 +148,12 @@ static void amdgpu_device_free_internal(amdgpu_device_handle dev)
 	close(dev->fd);
 	if ((dev->flink_fd >= 0) && (dev->fd != dev->flink_fd))
 		close(dev->flink_fd);
-	free(dev->asic_ids);
+	if (dev->asic_ids) {
+		for (id = dev->asic_ids; id->did; id++)
+			free(id->marketing_name);
+
+		free(dev->asic_ids);
+	}
 	free(dev);
 }
 
@@ -283,6 +289,12 @@ int amdgpu_device_initialize(int fd,
 
 	pthread_mutex_init(&dev->remap_mutex, NULL);
 	list_inithead(&dev->remap_list);
+
+	r = amdgpu_parse_asic_ids(&dev->asic_ids);
+	if (r) {
+		fprintf(stderr, "%s: Cannot parse ASIC IDs, 0x%x.",
+			__func__, r);
+	}
 
 	*major_version = dev->major_version;
 	*minor_version = dev->minor_version;

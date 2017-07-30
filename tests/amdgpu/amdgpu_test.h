@@ -108,16 +108,25 @@ extern CU_TestInfo vce_tests[];
  * Initialize uvd enc test suite
  */
 int suite_uvd_enc_tests_init();
++ * Initialize vcn test suite
++ */
+int suite_vcn_tests_init();
 
 /**
  * Deinitialize uvd enc test suite
  */
 int suite_uvd_enc_tests_clean();
++ * Deinitialize vcn test suite
++ */
+int suite_vcn_tests_clean();
 
 /**
  * Tests in uvd enc test suite
  */
 extern CU_TestInfo uvd_enc_tests[];
++ * Tests in vcn test suite
++ */
+extern CU_TestInfo vcn_tests[];
 
 /**
 + * Initialize vcn test suite
